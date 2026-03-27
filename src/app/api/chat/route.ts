@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     });
 
     const result = streamText({
-      model: workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+      model: workersai("@cf/qwen/qwen3-30b-a3b-fp8"),
       system: "You are a helpful assistant that answers the user's questions.",
       messages: await convertToModelMessages(messages),
       onError(error) {
