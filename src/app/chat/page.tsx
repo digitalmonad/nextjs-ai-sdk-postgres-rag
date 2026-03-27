@@ -6,6 +6,7 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Message,
   MessageContent,
@@ -57,8 +58,14 @@ export default function RAGChatBot() {
                 })}
               </div>
             ))}
-            {status === "submitted" || status === "streaming" ? null : null}
+            {(status === "submitted" || status === "streaming") && (
+              <div className="px-4 pb-4 flex items-center gap-2 text-sm text-muted-foreground">
+                <Spinner />
+                <span>Waiting for the answer...</span>
+              </div>
+            )}
           </ConversationContent>
+
           <ConversationScrollButton />
         </Conversation>
         <PromptInput onSubmit={handleSubmit}>
@@ -67,7 +74,7 @@ export default function RAGChatBot() {
           </PromptInputBody>
           <PromptInputFooter>
             <PromptInputTools></PromptInputTools>
-            <PromptInputSubmit />
+            <PromptInputSubmit status={status} />
           </PromptInputFooter>
         </PromptInput>
       </div>
