@@ -10,7 +10,10 @@ import {
   InferUITools,
   UIDataTypes,
   stepCountIs,
+  wrapLanguageModel,
 } from "ai";
+
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 import { z } from "zod";
 import { searchDocuments } from "@/lib/search";
@@ -59,8 +62,13 @@ export async function POST(req: Request) {
       apiKey: process.env.CLOUDFLARE_API_TOKEN!,
     });
 
-    const result = streamText({
+    const model = wrapLanguageModel({
       model: workersai("@cf/qwen/qwen3-30b-a3b-fp8"),
+      middleware: devToolsMiddleware(),
+    });
+
+    const result = streamText({
+      model,
       system: `You are a helpful assistant with access to a knowledge base. 
           When users ask questions, always search the knowledge base for relevant information!.
           Always search before answering if the question might relate to uploaded documents.
@@ -68,7 +76,17 @@ export async function POST(req: Request) {
       messages: await convertToModelMessages(messages),
       stopWhen: stepCountIs(5),
       toolChoice: "auto",
+      prepareStep: async ({ stepNumber }) => {
+        if (stepNumber === 0) {
+          return { toolChoice: "required" };
+        }
+      },
       tools,
+      onStepFinish({ toolCalls, toolResults }) {
+        if (toolCalls.length > 0) {
+          console.log("[results]", JSON.stringify(toolResults));
+        }
+      },
       onError(error) {
         console.error("streamText error:", error);
       },
