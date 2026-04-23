@@ -1,6 +1,6 @@
 "use server";
 
-import { PDFParse } from "pdf-parse";
+import { extractText, getDocumentProxy } from "unpdf";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/schema";
 import { generateEmbeddings } from "@/lib/embeddings";
@@ -14,10 +14,10 @@ export async function processPdfFile(formData: FormData) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    const { text } = await extractText(pdf, { mergePages: true });
 
-    if (!result.text || result.text.trim().length === 0) {
+    if (!text || text.trim().length === 0) {
       return {
         success: false,
         error: "No text found in PDF",
@@ -25,7 +25,7 @@ export async function processPdfFile(formData: FormData) {
     }
 
     // Chunk the text
-    const chunks = await chunkContent(result.text);
+    const chunks = await chunkContent(text);
 
     // Generate embeddings
     const embeddings = await generateEmbeddings(chunks);
