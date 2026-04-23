@@ -50,3 +50,13 @@ export async function processPdfFile(formData: FormData) {
     };
   }
 }
+
+export async function clearDocuments() {
+  try {
+    await db.delete(documents);
+    return { success: true };
+  } catch (error) {
+    console.error("Clear documents error:", error);
+    return { success: false, error: "Failed to clear documents" };
+  }
+}

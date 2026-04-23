@@ -1,19 +1,49 @@
 "use client";
 
 import { useState } from "react";
-import { processPdfFile } from "./actions";
+import { processPdfFile, clearDocuments } from "./actions";
+import { db } from "@/lib/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 
 export default function PDFUpload() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [message, setMessage] = useState<{
     type: "error" | "success";
     text: string;
   } | null>(null);
+
+  const handleClearDocuments = async () => {
+    if (!confirm("Are you sure you want to delete all documents?")) return;
+    setIsClearing(true);
+    setMessage(null);
+    try {
+      const result = await clearDocuments();
+      if (result.success) {
+        setMessage({
+          type: "success",
+          text: "All documents have been deleted",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error || "Failed to delete documents",
+        });
+      }
+    } catch {
+      setMessage({
+        type: "error",
+        text: "An error occurred while deleting documents",
+      });
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,6 +109,21 @@ export default function PDFUpload() {
                   </span>
                 </div>
               )}
+
+              <div className="pt-2">
+                <Button
+                  variant="destructive"
+                  onClick={handleClearDocuments}
+                  disabled={isClearing || isLoading}
+                >
+                  {isClearing ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Delete all documents
+                </Button>
+              </div>
 
               {message && (
                 <Alert
