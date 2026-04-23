@@ -48,10 +48,10 @@ export type ChatTools = InferUITools<typeof tools>;
 export type ChatMessage = UIMessage<never, UIDataTypes, ChatTools>;
 
 export async function POST(req: Request) {
-  //   const { userId } = await auth();
-  //   if (!userId) return new Response("Unauthorized", { status: 401 });
-
   try {
+    const { userId } = await auth();
+    if (!userId) return new Response("Unauthorized", { status: 401 });
+
     const { messages }: { messages: ChatMessage[] } = await req.json();
 
     const workersai = createWorkersAI({
