@@ -62,10 +62,11 @@ export async function POST(req: Request) {
       apiKey: process.env.CLOUDFLARE_API_TOKEN!,
     });
 
-    const model = wrapLanguageModel({
-      model: workersai("@cf/qwen/qwen3-30b-a3b-fp8"),
-      middleware: devToolsMiddleware(),
-    });
+    const baseModel = workersai("@cf/qwen/qwen3-30b-a3b-fp8");
+    const model =
+      process.env.NODE_ENV === "development"
+        ? wrapLanguageModel({ model: baseModel, middleware: devToolsMiddleware() })
+        : baseModel;
 
     const result = streamText({
       model,
